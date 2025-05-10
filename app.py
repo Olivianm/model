@@ -6,11 +6,11 @@ import pandas as pd
 import os
 
 # Flask setup
-app = Flask(__name__, template_folder='templates')
+app = Flask(_name_, template_folder='templates')
 CORS(app, resources={
-    r"/predict": {"origins": "*"},
+    r"/predict": {"origins": "*"},  # Allow all origins for the predict endpoint
     r"/": {"origins": "*"}
-})  
+})
 
 # Load models
 try:
@@ -39,10 +39,9 @@ cafeteria_mapping = {
 }
 meal_period_mapping = {"Breakfast": 0, "Lunch": 1, "Dinner": 2}
 
-
 @app.route('/')
 def menu():
-    return render_template('index.html')
+    return jsonify({'status': 'Menu Model API is running'})
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -102,5 +101,6 @@ def predict():
             "status": "error"
         }), 500
 
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+if _name_ == "_main_":
+    port = int(os.environ.get("PORT", 5000))  # Use PORT env variable for deployment
+    app.run(host="0.0.0.0", port=port, debug=False)
