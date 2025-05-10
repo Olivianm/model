@@ -8,7 +8,7 @@ import os
 # Flask setup
 app = Flask(_name_, template_folder='templates')
 CORS(app, resources={
-    r"/predict": {"origins": "*"},  # Allow all origins for the predict endpoint
+    r"/predict": {"origins": "*"},
     r"/": {"origins": "*"}
 })
 
@@ -102,5 +102,5 @@ def predict():
         }), 500
 
 if _name_ == "_main_":
-    port = int(os.environ.get("PORT", 5000))  # Use PORT env variable for deployment
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
