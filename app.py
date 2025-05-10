@@ -6,7 +6,7 @@ import pandas as pd
 import os
 
 # Flask setup
-app = Flask(_name_, template_folder='templates')
+app = Flask(__name__, template_folder='templates')
 CORS(app, resources={
     r"/predict": {"origins": "*"},
     r"/": {"origins": "*"}
