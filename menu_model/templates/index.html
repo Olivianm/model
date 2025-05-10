@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meal Prediction</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            font-family: sans-serif;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #722F37;
+        }
+        .btn-primary {
+            background-color: #722F37;
+            border-color: #722F37;
+        }
+        .btn-primary:hover {
+            background-color: #5a1f26;
+            border-color: #5a1f26;
+        }
+        .alert {
+            display: none;
+            margin-top: 15px;
+        }
+        #prediction-output ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #prediction-output li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Meal Prediction</h1>
+        <p class="text-center text-muted">Select a cafeteria, day, and meal period to predict the most likely product.</p>
+
+        <form id="prediction-form" action="/model/menu_model/predict" method="POST">
+            <div class="form-group">
+                <label for="cafeteria"><strong>Cafeteria</strong></label>
+                <select name="cafeteria" class="form-control" id="cafeteria" required>
+                    <option value="" disabled selected>Select a cafeteria</option>
+                    <option value="Akorno Services Ltd - Main Cafe">Akorno Services Ltd - Main Cafe</option>
+                    <option value="Hallmark">Hallmark</option>
+                    <option value="Munchies Services Ltd">Munchies Services Ltd</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="day_of_week"><strong>Day of the Week</strong></label>
+                <select name="day_of_week" class="form-control" id="day_of_week" required>
+                    <option value="" disabled selected>Select a day</option>
+                    <option value="Monday">Monday</option>
+                    <option value="Tuesday">Tuesday</option>
+                    <option value="Wednesday">Wednesday</option>
+                    <option value="Thursday">Thursday</option>
+                    <option value="Friday">Friday</option>
+                    <option value="Saturday">Saturday</option>
+                    <option value="Sunday">Sunday</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="meal_period"><strong>Meal Period</strong></label>
+                <select name="meal_period" class="form-control" id="meal_period" required>
+                    <option value="" disabled selected>Select a meal period</option>
+                    <option value="Breakfast">Breakfast</option>
+                    <option value="Lunch">Lunch</option>
+                    <option value="Dinner">Dinner</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Predict Meal</button>
+        </form>
+
+        <div id="prediction-output" class="alert alert-info text-center mt-4"></div>
+        <div id="error-output" class="alert alert-danger text-center mt-4"></div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $("#prediction-form").on("submit", function(event) {
+                event.preventDefault();
+                
+                // Clear previous results
+                $("#prediction-output, #error-output").hide().empty();
+                
+                // Show loading state
+                const submitBtn = $(this).find("button[type='submit']");
+                submitBtn.prop('disabled', true).html(
+                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Predicting...'
+                );
+
+                $.ajax({
+                    url: "/predict",
+                    type: "POST",
+                    data: $(this).serialize(),
+                    dataType: "json",
+                    success: function(response) {
+                        submitBtn.prop('disabled', false).text('Predict Meal');
+                        
+                        if (response.error) {
+                            $("#error-output").text(response.error).show();
+                        } else if (response.predictions) {
+                            let predictionsHTML = `
+                                <h4>Top 3 Predictions</h4>
+                                <ul class="list-group">
+                                    ${response.predictions.map(pred => `
+                                        <li class="list-group-item">${pred}</li>
+                                    `).join('')}
+                                </ul>
+                            `;
+                            $("#prediction-output").html(predictionsHTML).show();
+                        }
+                    },
+                    error: function(xhr) {
+                        submitBtn.prop('disabled', false).text('Predict Meal');
+                        let errorMsg = "An error occurred";
+                        
+                        try {
+                            const response = JSON.parse(xhr.responseText);
+                            errorMsg = response.error || xhr.statusText;
+                        } catch (e) {
+                            errorMsg = xhr.statusText || "Server error";
+                        }
+                        
+                        $("#error-output").text(errorMsg).show();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
